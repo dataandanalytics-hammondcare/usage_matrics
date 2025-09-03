@@ -562,12 +562,13 @@
                 });
 
                 // Parse dates
+                // Handle 'Date' and 'CreationTime' fields from cleaned columns
                 if (cleanRow.Date) {
-                    cleanRow.ParsedDate = new Date(cleanRow.Date);
+                    cleanRow.ParsedDate = parseExcelDate(cleanRow.Date);
                 }
                 if (cleanRow.CreationTime) {
-                    cleanRow.ParsedCreationTime = new Date(cleanRow.CreationTime);
-                    cleanRow.Hour = cleanRow.ParsedCreationTime.getHours();
+                    cleanRow.ParsedCreationTime = parseExcelDate(cleanRow.CreationTime);
+                    cleanRow.Hour = cleanRow.ParsedCreationTime ? cleanRow.ParsedCreationTime.getHours() : undefined;
                 }
 
                 // Extract browser info
@@ -582,6 +583,26 @@
 
                 return cleanRow;
             });
+        }
+
+        // Helper to parse Excel-style date strings (e.g. '12/08/2025 0:00')
+        function parseExcelDate(dateStr) {
+            if (!dateStr) return undefined;
+            let cleaned = String(dateStr).replace(/\./g, ':');
+            // Try parsing as 'DD/MM/YYYY HH:mm'
+            const parts = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{1,2})/);
+            if (parts) {
+                return new Date(
+                    parseInt(parts[3]),
+                    parseInt(parts[2]) - 1,
+                    parseInt(parts[1]),
+                    parseInt(parts[4]),
+                    parseInt(parts[5])
+                );
+            }
+            // Fallback: try Date constructor
+            const d = new Date(cleaned);
+            return isNaN(d.getTime()) ? undefined : d;
         }
 
         function extractBrowser(userAgent) {
