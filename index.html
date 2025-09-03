@@ -292,7 +292,7 @@
         <!-- Data Loading Section -->
         <div class="upload-section">
             <h2>📁 Power BI Usage Analytics Dashboard</h2>
-            <p>Automatically loading data from repository: <code>data/Usage_Metrics.xlsx</code></p>
+            <p>Automatically loading data from repository: <code>data/Usage_Metrics.xlsm</code></p>
             <div class="file-input-wrapper">
                 <button id="loadDataBtn" class="file-input-label">
                     🚀 Load Dashboard Data
@@ -462,32 +462,32 @@
 
             try {
                 // Fetch the Excel file from the repository
-                const response = await fetch('data/Usage_Metrics.xlsx');
-                
+                const response = await fetch('data/Usage_Metrics.xlsm');
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch data file: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const arrayBuffer = await response.arrayBuffer();
                 const data = processExcelData(arrayBuffer);
-                
+
                 rawData = processData(data);
                 filteredData = [...rawData];
                 currentData = [...rawData];
-                
+
                 setupFilters();
                 updateDashboard();
-                
+
                 document.getElementById('dashboard').classList.remove('hidden');
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('fileInfo').textContent = `✅ Successfully loaded ${rawData.length} records from repository data`;
-                
+
             } catch (error) {
                 console.error('Error loading repository data:', error);
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('fileInfo').innerHTML = `
                     ❌ Error loading repository data: ${error.message}<br>
-                    <small>Make sure the file exists at: <code>data/Usage_Metrics.xlsx</code></small><br>
+                    <small>Make sure the file exists at: <code>data/Usage_Metrics.xlsm</code></small><br>
                     <small>You can still upload a file manually using the upload option above.</small>
                 `;
             }
