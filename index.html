@@ -375,6 +375,10 @@
                     <div class="metric-value" id="activeWorkspaces">0</div>
                     <div class="metric-label">Active Workspaces</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="leastUsedReport">--</div>
+                    <div class="metric-label">Least Used Report</div>
+                </div>
             </div>
 
             <!-- Charts Grid -->
@@ -734,12 +738,26 @@
             const peakHour = Object.keys(hourCounts).reduce((a, b) => 
                 hourCounts[a] > hourCounts[b] ? a : b, '0') + ':00';
 
+            // Calculate least used report overall
+            const reportCounts = {};
+            filteredData.forEach(d => {
+                if (d.ReportName) {
+                    reportCounts[d.ReportName] = (reportCounts[d.ReportName] || 0) + 1;
+                }
+            });
+            let leastUsedReport = '--';
+            if (Object.keys(reportCounts).length > 0) {
+                const sortedLeast = Object.entries(reportCounts).sort((a, b) => a[1] - b[1]);
+                leastUsedReport = `${sortedLeast[0][0]} (${sortedLeast[0][1]})`;
+            }
+
             document.getElementById('totalViews').textContent = totalViews.toLocaleString();
             document.getElementById('uniqueUsers').textContent = uniqueUsers;
             document.getElementById('uniqueReports').textContent = uniqueReports;
             document.getElementById('avgDaily').textContent = avgDaily;
             document.getElementById('peakHour').textContent = peakHour;
             document.getElementById('activeWorkspaces').textContent = uniqueWorkspaces;
+            document.getElementById('leastUsedReport').textContent = leastUsedReport;
         }
 
         function updateCharts() {
@@ -984,7 +1002,7 @@
                         reportCounts[d.ReportName] = (reportCounts[d.ReportName] || 0) + 1;
                     }
                 });
-                
+
                 if (Object.keys(reportCounts).length > 0) {
                     const topReport = Object.keys(reportCounts).reduce((a, b) => 
                         reportCounts[a] > reportCounts[b] ? a : b);
@@ -992,6 +1010,30 @@
                     const topReportPercent = Math.round((topReportViews / totalViews) * 100);
                     insights.push(`🏆 "${topReport}" is the most popular report with ${topReportViews} views (${topReportPercent}%)`);
                 }
+
+                // Least used report overall
+                if (Object.keys(reportCounts).length > 0) {
+                    const sortedLeast = Object.entries(reportCounts).sort((a, b) => a[1] - b[1]);
+                    const leastReport = sortedLeast[0][0];
+                    const leastReportViews = sortedLeast[0][1];
+                    insights.push(`🕵️‍♂️ "${leastReport}" is the least used report overall with ${leastReportViews} views`);
+                }
+
+                // Least used report per workspace
+                const workspaceReports = {};
+                filteredData.forEach(d => {
+                    if (d.Workspace && d.ReportName) {
+                        if (!workspaceReports[d.Workspace]) workspaceReports[d.Workspace] = {};
+                        workspaceReports[d.Workspace][d.ReportName] = (workspaceReports[d.Workspace][d.ReportName] || 0) + 1;
+                    }
+                });
+                Object.keys(workspaceReports).forEach(ws => {
+                    const reports = workspaceReports[ws];
+                    const sortedLeast = Object.entries(reports).sort((a, b) => a[1] - b[1]);
+                    if (sortedLeast.length > 0) {
+                        insights.push(`📉 Workspace "${ws}": Least used report is "${sortedLeast[0][0]}" (${sortedLeast[0][1]} views)`);
+                    }
+                });
                 
                 // User engagement insights
                 const userViewCounts = {};
