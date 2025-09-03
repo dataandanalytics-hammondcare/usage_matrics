@@ -736,12 +736,20 @@
             const dailyData = {};
             filteredData.forEach(d => {
                 if (d.ParsedDate) {
-                    const dateStr = d.ParsedDate.toISOString().split('T')[0];
+                    // Format date as 'DD/MM/YYYY' for x-axis
+                    const dateStr = d.ParsedDate.getDate().toString().padStart(2, '0') + '/' +
+                        (d.ParsedDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                        d.ParsedDate.getFullYear();
                     dailyData[dateStr] = (dailyData[dateStr] || 0) + 1;
                 }
             });
 
-            const dates = Object.keys(dailyData).sort();
+            const dates = Object.keys(dailyData).sort((a, b) => {
+                // Sort by date value
+                const [da, ma, ya] = a.split('/').map(Number);
+                const [db, mb, yb] = b.split('/').map(Number);
+                return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+            });
             const values = dates.map(date => dailyData[date]);
 
             const trace = {
@@ -756,7 +764,12 @@
 
             Plotly.newPlot('dailyTrendsChart', [trace], {
                 margin: { l: 50, r: 50, t: 20, b: 50 },
-                xaxis: { title: 'Date' },
+                xaxis: {
+                    title: 'Date',
+                    tickformat: '%d/%m/%Y',
+                    tickangle: -45,
+                    automargin: true
+                },
                 yaxis: { title: 'Number of Views' },
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 paper_bgcolor: 'rgba(0,0,0,0)'
